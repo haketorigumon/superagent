@@ -1,0 +1,48 @@
+
+"""Capability Manager Plugin - Manages and generates capabilities"""
+from datetime import datetime
+
+PLUGIN_INFO = {
+    "name": "capability_manager", 
+    "version": "1.0.0",
+    "description": "Dynamic capability management system",
+    "capabilities": ["capability_generation", "capability_management"],
+    "dependencies": []
+}
+
+class CapabilityManager:
+    def __init__(self, system):
+        self.system = system
+        self.capabilities_registry = {}
+    
+    async def generate_capability(self, requirement: str, context: dict):
+        """Generate a new capability dynamically"""
+        prompt = await self.system.prompt_engine.generate_prompt(
+            "capability_generator",
+            {
+                "requirement": requirement,
+                "current_capabilities": list(self.capabilities_registry.keys()),
+                "context": context,
+                "constraints": context.get("constraints", [])
+            }
+        )
+        
+        capability_spec = await self.system.llm_client.generate(prompt, "You are a helpful assistant.")
+        
+        # Parse and register capability
+        capability_name = f"generated_{len(self.capabilities_registry)}"
+        self.capabilities_registry[capability_name] = {
+            "specification": capability_spec,
+            "requirement": requirement,
+            "context": context,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        return capability_name
+    
+    async def get_capability(self, name: str):
+        """Get a capability by name"""
+        return self.capabilities_registry.get(name)
+
+def create_plugin(system):
+    return CapabilityManager(system)
