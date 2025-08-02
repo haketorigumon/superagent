@@ -1,5 +1,5 @@
 """
-Unified Configuration System - Completely flexible and prompt-driven configuration
+Configuration System - Completely flexible and prompt-driven configuration
 Eliminates hardcoding through dynamic configuration generation and adaptation
 """
 
