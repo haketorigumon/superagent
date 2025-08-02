@@ -1,0 +1,169 @@
+# Unified AI Agent System Configuration
+# The ultimate flexible configuration for infinite adaptability
+
+# Prompt-driven behavior configuration
+prompt:
+  templates_dir: "prompts"
+  system_prompts_dir: "system"
+  auto_generate: true
+  optimization_enabled: true
+  fallback_enabled: true
+  cache_prompts: true
+
+# Persistent memory system configuration
+memory:
+  storage_dir: "persistent_memory"
+  auto_consolidation: true
+  max_working_memory: 1000
+  importance_threshold: 0.3
+  retention_days: 365
+  backup_enabled: true
+  compression_enabled: true
+
+# Plugin system configuration
+plugin:
+  plugins_dir: "plugins"
+  auto_discovery: true
+  auto_generation: true
+  dependency_resolution: true
+  hot_reload: true
+  sandbox_enabled: true
+
+# Task management configuration
+task:
+  max_concurrent_tasks: 10
+  task_timeout: 300
+  auto_retry: true
+  max_retries: 3
+  priority_scheduling: true
+  load_balancing: true
+
+# LLM integration configuration
+llm:
+  provider: "ollama"
+  model: "llama3"
+  base_url: "http://localhost:11434"
+  api_key: null
+  temperature: 0.8
+  max_tokens: 4096
+  timeout: 60
+  retry_attempts: 3
+  fallback_providers: []
+
+# System behavior configuration
+system:
+  auto_evolution: true
+  self_optimization: true
+  continuous_learning: true
+  adaptive_behavior: true
+  error_recovery: true
+  performance_monitoring: true
+
+# Security configuration
+security:
+  sandbox_execution: true
+  code_validation: true
+  resource_limits: true
+  access_control: true
+  audit_logging: true
+
+# Web interface configuration
+web:
+  host: "0.0.0.0"
+  port: 12000
+  enable_cors: true
+  real_time_updates: true
+  authentication: false
+  ssl_enabled: false
+
+# Dynamic configurations (populated at runtime)
+dynamic: {}
+
+# Metadata
+metadata:
+  created_at: "2025-08-02T00:00:00"
+  version: "1.0.0"
+  description: "Unified AI Agent System Configuration"
+
+# API Keys (alternatively set as environment variables)
+# Format: PROVIDER_API_KEY (e.g., OPENAI_API_KEY, ANTHROPIC_API_KEY)
+api_keys:
+  openai: null      # Set OPENAI_API_KEY environment variable
+  anthropic: null   # Set ANTHROPIC_API_KEY environment variable
+  google: null      # Set GOOGLE_API_KEY environment variable
+  azure: null       # Set AZURE_API_KEY environment variable
+  cohere: null      # Set COHERE_API_KEY environment variable
+  huggingface: null # Set HUGGINGFACE_API_KEY environment variable
+  together: null    # Set TOGETHER_API_KEY environment variable
+  groq: null        # Set GROQ_API_KEY environment variable
+  deepseek: null    # Set DEEPSEEK_API_KEY environment variable
+  moonshot: null    # Set MOONSHOT_API_KEY environment variable
+  zhipu: null       # Set ZHIPU_API_KEY environment variable
+  baidu: null       # Set BAIDU_API_KEY environment variable
+  alibaba: null     # Set ALIBABA_API_KEY environment variable
+
+# Advanced configuration options
+advanced:
+  # Entity management
+  entity_cache_size: 10000
+  entity_cleanup_interval: 3600
+  
+  # Memory optimization
+  memory_compression_threshold: 1000
+  memory_cleanup_interval: 1800
+  
+  # Plugin management
+  plugin_timeout: 30
+  plugin_retry_attempts: 2
+  
+  # Performance tuning
+  async_batch_size: 100
+  connection_pool_size: 20
+  
+  # Monitoring
+  metrics_collection_interval: 60
+  health_check_interval: 300
+  
+  # Logging
+  log_level: "INFO"
+  log_rotation: true
+  log_max_size: "100MB"
+  log_backup_count: 5
+
+# Environment-specific overrides
+environments:
+  development:
+    llm:
+      temperature: 0.9
+    system:
+      auto_evolution: false
+    security:
+      sandbox_execution: false
+  
+  production:
+    llm:
+      temperature: 0.7
+    system:
+      auto_evolution: true
+    security:
+      sandbox_execution: true
+    web:
+      authentication: true
+      ssl_enabled: true
+  
+  testing:
+    llm:
+      provider: "mock"
+    memory:
+      storage_dir: "test_memory"
+    plugin:
+      plugins_dir: "test_plugins"
+
+# Feature flags for experimental features
+features:
+  quantum_reasoning: false
+  neural_architecture_search: false
+  federated_learning: false
+  blockchain_consensus: false
+  swarm_intelligence: false
+  consciousness_simulation: false
