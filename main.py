@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified AI Agent System - Main Entry Point
+AI Agent System - Main Entry Point
 The ultimate flexible AI agent architecture with infinite capabilities
 Completely prompt-driven, plugin-based, and self-evolving system
 """
