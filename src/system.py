@@ -1,5 +1,5 @@
 """
-Unified AI Agent System - The Ultimate Flexible Architecture
+AI Agent System - The Ultimate Flexible Architecture
 Minimizes hardcoding, maximizes adaptability through prompt-driven design
 Achieves infinite flexibility, scalability, and task planning capabilities
 Independent permanent continuous stateful execution environment
