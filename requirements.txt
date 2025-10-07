@@ -1,0 +1,6 @@
+typer
+rich
+aiofiles
+pyyaml
+pytest
+pytest-asyncio

@@ -647,7 +647,8 @@ class PersistentMemorySystem:
 class PluginSystem:
     """Dynamic plugin system for infinite extensibility"""
     
-    def __init__(self, plugins_dir: str = "plugins"):
+    def __init__(self, system, plugins_dir: str = "plugins"):
+        self.system = system
         self.plugins_dir = Path(plugins_dir)
         self.plugins_dir.mkdir(parents=True, exist_ok=True)
         self.loaded_plugins: Dict[str, Any] = {}
@@ -700,6 +701,7 @@ class PluginSystem:
         plugin_templates = {
             "task_executor": '''
 """Task Executor Plugin - Executes tasks with full flexibility"""
+from datetime import datetime
 
 PLUGIN_INFO = {
     "name": "task_executor",
@@ -804,6 +806,7 @@ def create_plugin(system):
             
             "workflow_engine": '''
 """Workflow Engine Plugin - Manages complex workflows"""
+from datetime import datetime
 
 PLUGIN_INFO = {
     "name": "workflow_engine",
@@ -940,7 +943,7 @@ def create_plugin(system):
             
             # Create plugin instance
             if hasattr(module, 'create_plugin'):
-                plugin_instance = module.create_plugin(self)
+                plugin_instance = module.create_plugin(self.system)
                 self.loaded_plugins[plugin_name] = plugin_instance
                 logger.info(f"Loaded plugin: {plugin_name}")
                 return True
@@ -975,7 +978,7 @@ class UnifiedSystem:
         # Core components
         self.prompt_engine = PromptEngine()
         self.memory_system = PersistentMemorySystem()
-        self.plugin_system = PluginSystem()
+        self.plugin_system = PluginSystem(self)
         
         # Entity management
         self.entities: Dict[str, UniversalEntity] = {}

@@ -15,9 +15,9 @@ from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from typing import Optional, List
 
-from src.system import UnifiedSystem, EntityType, Priority
-from src.config import load_config
-from src.utils.llm_client import LLMClient
+from src.core.unified_system import UnifiedSystem, EntityType, Priority
+from src.utils.unified_config import load_config
+from src.utils.llm.llm_client import LLMClient
 
 # Configure logging
 logging.basicConfig(
