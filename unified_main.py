@@ -15,7 +15,8 @@ from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from typing import Optional, List
 
-from src.core.unified_system import UnifiedSystem, EntityType, Priority
+from src.core.system import UnifiedSystem
+from src.core.entities import EntityType, Priority
 from src.utils.unified_config import load_config
 from src.utils.llm.llm_client import LLMClient
 

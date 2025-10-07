@@ -2,7 +2,8 @@ import asyncio
 import asyncio
 import pytest
 import pytest_asyncio
-from src.core.unified_system import UnifiedSystem, EntityType, Priority, MemoryType
+from src.core.system import UnifiedSystem
+from src.core.entities import EntityType, Priority, MemoryType
 from src.utils.unified_config import load_config
 from src.utils.llm.llm_client import LLMClient
 

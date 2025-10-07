@@ -1,5 +1,6 @@
 import asyncio
-from src.core.unified_system import UnifiedSystem, EntityType, Priority
+from src.core.system import UnifiedSystem
+from src.core.entities import EntityType, Priority
 from src.utils.unified_config import load_config
 from src.utils.llm.llm_client import LLMClient
 from rich.console import Console
