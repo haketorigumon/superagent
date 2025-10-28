@@ -17,7 +17,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PromptConfig:
-    """Configuration for prompt-driven behavior"""
+    """
+    Configuration for prompt-driven behavior.
+
+    Attributes:
+        templates_dir: The directory for prompt templates.
+        system_prompts_dir: The directory for system prompts.
+        auto_generate: Whether to automatically generate new prompts.
+        optimization_enabled: Whether to enable prompt optimization.
+        fallback_enabled: Whether to use fallback prompts.
+        cache_prompts: Whether to cache generated prompts.
+    """
     templates_dir: str = "prompts"
     system_prompts_dir: str = "system"
     auto_generate: bool = True
@@ -28,7 +38,18 @@ class PromptConfig:
 
 @dataclass
 class MemoryConfig:
-    """Configuration for persistent memory system"""
+    """
+    Configuration for the persistent memory system.
+
+    Attributes:
+        storage_dir: The directory for persistent memory storage.
+        auto_consolidation: Whether to automatically consolidate memories.
+        max_working_memory: The maximum size of the working memory.
+        importance_threshold: The threshold for memory importance.
+        retention_days: The number of days to retain memories.
+        backup_enabled: Whether to enable memory backups.
+        compression_enabled: Whether to enable memory compression.
+    """
     storage_dir: str = "persistent_memory"
     auto_consolidation: bool = True
     max_working_memory: int = 1000
@@ -40,7 +61,17 @@ class MemoryConfig:
 
 @dataclass
 class PluginConfig:
-    """Configuration for plugin system"""
+    """
+    Configuration for the plugin system.
+
+    Attributes:
+        plugins_dir: The directory for plugins.
+        auto_discovery: Whether to automatically discover plugins.
+        auto_generation: Whether to automatically generate core plugins.
+        dependency_resolution: Whether to resolve plugin dependencies.
+        hot_reload: Whether to enable hot reloading of plugins.
+        sandbox_enabled: Whether to run plugins in a sandbox.
+    """
     plugins_dir: str = "plugins"
     auto_discovery: bool = True
     auto_generation: bool = True
@@ -51,7 +82,17 @@ class PluginConfig:
 
 @dataclass
 class TaskConfig:
-    """Configuration for task management"""
+    """
+    Configuration for task management.
+
+    Attributes:
+        max_concurrent_tasks: The maximum number of concurrent tasks.
+        task_timeout: The timeout for tasks in seconds.
+        auto_retry: Whether to automatically retry failed tasks.
+        max_retries: The maximum number of retries for a task.
+        priority_scheduling: Whether to use priority scheduling.
+        load_balancing: Whether to enable load balancing for tasks.
+    """
     max_concurrent_tasks: int = 10
     task_timeout: int = 300
     auto_retry: bool = True
@@ -62,7 +103,20 @@ class TaskConfig:
 
 @dataclass
 class LLMConfig:
-    """Configuration for LLM integration"""
+    """
+    Configuration for LLM integration.
+
+    Attributes:
+        provider: The name of the LLM provider.
+        model: The name of the LLM model.
+        base_url: The base URL for the LLM API.
+        api_key: The API key for the LLM provider.
+        temperature: The temperature setting for the LLM.
+        max_tokens: The maximum number of tokens to generate.
+        timeout: The timeout for LLM requests in seconds.
+        retry_attempts: The number of retry attempts for LLM requests.
+        fallback_providers: A list of fallback LLM providers.
+    """
     provider: str = "ollama"
     model: str = "llama3"
     base_url: Optional[str] = "http://localhost:11434"
@@ -76,7 +130,17 @@ class LLMConfig:
 
 @dataclass
 class SystemConfig:
-    """Configuration for system behavior"""
+    """
+    Configuration for system behavior.
+
+    Attributes:
+        auto_evolution: Whether to enable automatic system evolution.
+        self_optimization: Whether to enable self-optimization of the system.
+        continuous_learning: Whether to enable continuous learning.
+        adaptive_behavior: Whether to enable adaptive behavior.
+        error_recovery: Whether to enable automatic error recovery.
+        performance_monitoring: Whether to enable performance monitoring.
+    """
     auto_evolution: bool = True
     self_optimization: bool = True
     continuous_learning: bool = True
@@ -87,7 +151,16 @@ class SystemConfig:
 
 @dataclass
 class SecurityConfig:
-    """Configuration for security settings"""
+    """
+    Configuration for security settings.
+
+    Attributes:
+        sandbox_execution: Whether to execute code in a sandbox.
+        code_validation: Whether to validate code before execution.
+        resource_limits: Whether to enforce resource limits.
+        access_control: Whether to enable access control.
+        audit_logging: Whether to enable audit logging.
+    """
     sandbox_execution: bool = True
     code_validation: bool = True
     resource_limits: bool = True
@@ -97,7 +170,17 @@ class SecurityConfig:
 
 @dataclass
 class WebConfig:
-    """Configuration for web interface"""
+    """
+    Configuration for the web interface.
+
+    Attributes:
+        host: The host for the web interface.
+        port: The port for the web interface.
+        enable_cors: Whether to enable CORS.
+        real_time_updates: Whether to enable real-time updates.
+        authentication: Whether to enable authentication.
+        ssl_enabled: Whether to enable SSL.
+    """
     host: str = "0.0.0.0"
     port: int = 12000
     enable_cors: bool = True
@@ -107,9 +190,40 @@ class WebConfig:
 
 
 class UnifiedConfig:
-    """Unified configuration system with infinite flexibility"""
+    """
+    A unified configuration system with infinite flexibility.
+
+    This class manages the configuration of the entire system. It can load
+    configuration from a file, override it with environment variables, and
+    even generate new configurations dynamically using an LLM.
+
+    Attributes:
+        config_file: The path to the configuration file.
+        config_data: The raw configuration data loaded from the file.
+        environment_overrides: A dictionary of configuration overrides from
+                               environment variables.
+        runtime_overrides: A dictionary of configuration overrides set at
+                           runtime.
+        prompt: The configuration for the prompt engine.
+        memory: The configuration for the memory system.
+        plugin: The configuration for the plugin system.
+        task: The configuration for task management.
+        llm: The configuration for the LLM client.
+        system: The configuration for general system behavior.
+        security: The configuration for security settings.
+        web: The configuration for the web interface.
+        dynamic_configs: A dictionary for storing dynamically generated
+                         configurations.
+        config_history: A list of dictionaries tracking configuration changes.
+    """
     
     def __init__(self, config_file: str = "config.yaml"):
+        """
+        Initializes the UnifiedConfig.
+
+        Args:
+            config_file: The path to the configuration file.
+        """
         self.config_file = Path(config_file)
         self.config_data: Dict[str, Any] = {}
         self.environment_overrides: Dict[str, Any] = {}
@@ -130,14 +244,14 @@ class UnifiedConfig:
         self.config_history: List[Dict[str, Any]] = []
         
     async def initialize(self):
-        """Initialize the configuration system"""
+        """Initializes the configuration system."""
         await self._load_config()
         await self._load_environment_overrides()
         await self._apply_configurations()
         await self._validate_configuration()
         
     async def _load_config(self):
-        """Load configuration from file"""
+        """Loads the configuration from a file."""
         if self.config_file.exists():
             try:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
@@ -151,7 +265,7 @@ class UnifiedConfig:
             await self._create_default_config()
     
     async def _create_default_config(self):
-        """Create default configuration file"""
+        """Creates a default configuration file."""
         default_config = {
             "prompt": asdict(self.prompt),
             "memory": asdict(self.memory),
@@ -172,7 +286,7 @@ class UnifiedConfig:
         await self.save_config()
     
     async def _load_environment_overrides(self):
-        """Load configuration overrides from environment variables"""
+        """Loads configuration overrides from environment variables."""
         env_prefix = "UNIFIED_"
         
         for key, value in os.environ.items():
@@ -197,7 +311,7 @@ class UnifiedConfig:
                 current[key_parts[-1]] = parsed_value
     
     async def _apply_configurations(self):
-        """Apply configurations to dataclass instances"""
+        """Applies configurations to the dataclass instances."""
         # Apply base configuration
         self._apply_config_section("prompt", self.prompt)
         self._apply_config_section("memory", self.memory)
@@ -215,7 +329,13 @@ class UnifiedConfig:
         self._apply_overrides(self.runtime_overrides)
     
     def _apply_config_section(self, section_name: str, config_obj):
-        """Apply configuration to a specific section"""
+        """
+        Applies configuration to a specific section.
+
+        Args:
+            section_name: The name of the configuration section.
+            config_obj: The dataclass instance for the section.
+        """
         if section_name in self.config_data:
             section_data = self.config_data[section_name]
             for key, value in section_data.items():
@@ -223,7 +343,12 @@ class UnifiedConfig:
                     setattr(config_obj, key, value)
     
     def _apply_overrides(self, overrides: Dict[str, Any]):
-        """Apply configuration overrides"""
+        """
+        Applies configuration overrides.
+
+        Args:
+            overrides: A dictionary of overrides to apply.
+        """
         for section, values in overrides.items():
             if hasattr(self, section):
                 config_obj = getattr(self, section)
@@ -232,7 +357,7 @@ class UnifiedConfig:
                         setattr(config_obj, key, value)
     
     async def _validate_configuration(self):
-        """Validate configuration settings"""
+        """Validates the configuration settings."""
         validation_errors = []
         
         # Validate LLM configuration
@@ -263,7 +388,7 @@ class UnifiedConfig:
             logger.warning(f"Configuration validation warnings: {validation_errors}")
     
     async def save_config(self):
-        """Save current configuration to file"""
+        """Saves the current configuration to a file."""
         config_to_save = {
             "prompt": asdict(self.prompt),
             "memory": asdict(self.memory),
@@ -288,7 +413,14 @@ class UnifiedConfig:
             logger.error(f"Error saving configuration: {e}")
     
     def set_runtime_override(self, section: str, key: str, value: Any):
-        """Set a runtime configuration override"""
+        """
+        Sets a runtime configuration override.
+
+        Args:
+            section: The configuration section.
+            key: The configuration key.
+            value: The configuration value.
+        """
         if section not in self.runtime_overrides:
             self.runtime_overrides[section] = {}
         
@@ -301,7 +433,23 @@ class UnifiedConfig:
                 setattr(config_obj, key, value)
     
     def get_config_value(self, section: str, key: str, default: Any = None) -> Any:
-        """Get a configuration value with fallback"""
+        """
+        Gets a configuration value with a fallback.
+
+        This method checks for the value in the following order:
+        1. Runtime overrides
+        2. Environment overrides
+        3. Main configuration
+        4. Dynamic configurations
+
+        Args:
+            section: The configuration section.
+            key: The configuration key.
+            default: The default value to return if the key is not found.
+
+        Returns:
+            The configuration value.
+        """
         # Check runtime overrides first
         if (section in self.runtime_overrides and 
             key in self.runtime_overrides[section]):
@@ -325,14 +473,32 @@ class UnifiedConfig:
         return default
     
     def set_dynamic_config(self, section: str, key: str, value: Any):
-        """Set a dynamic configuration value"""
+        """
+        Sets a dynamic configuration value.
+
+        Args:
+            section: The configuration section.
+            key: The configuration key.
+            value: The configuration value.
+        """
         if section not in self.dynamic_configs:
             self.dynamic_configs[section] = {}
         
         self.dynamic_configs[section][key] = value
     
     def get_api_key_for_provider(self, provider: str) -> Optional[str]:
-        """Get API key for a specific provider"""
+        """
+        Gets the API key for a specific provider.
+
+        This method checks for the API key in the LLM configuration,
+        environment variables, and dynamic configuration.
+
+        Args:
+            provider: The name of the LLM provider.
+
+        Returns:
+            The API key, or None if not found.
+        """
         # Check LLM config first
         if self.llm.api_key:
             return self.llm.api_key
@@ -351,7 +517,20 @@ class UnifiedConfig:
     
     async def generate_config_for_purpose(self, purpose: str, context: Dict[str, Any], 
                                         llm_client=None) -> Dict[str, Any]:
-        """Generate configuration dynamically for a specific purpose"""
+        """
+        Generates configuration dynamically for a specific purpose.
+
+        This method uses an LLM to generate configuration adjustments based on
+        a given purpose and context.
+
+        Args:
+            purpose: The purpose for which to generate the configuration.
+            context: The context for the configuration generation.
+            llm_client: An optional LLM client.
+
+        Returns:
+            A dictionary of configuration adjustments.
+        """
         if not llm_client:
             return {}
         
@@ -389,7 +568,19 @@ Configuration adjustments:"""
     
     async def optimize_config_based_on_metrics(self, metrics: Dict[str, Any], 
                                              llm_client=None) -> bool:
-        """Optimize configuration based on performance metrics"""
+        """
+        Optimizes the configuration based on performance metrics.
+
+        This method uses an LLM to suggest configuration improvements based on
+        the provided performance metrics.
+
+        Args:
+            metrics: A dictionary of performance metrics.
+            llm_client: An optional LLM client.
+
+        Returns:
+            True if the configuration was optimized, False otherwise.
+        """
         if not llm_client:
             return False
         
@@ -441,7 +632,12 @@ Optimization suggestions:"""
         return False
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert configuration to dictionary"""
+        """
+        Converts the configuration to a dictionary.
+
+        Returns:
+            A dictionary representation of the configuration.
+        """
         return {
             "prompt": asdict(self.prompt),
             "memory": asdict(self.memory),
@@ -457,7 +653,12 @@ Optimization suggestions:"""
         }
     
     def get_system_info(self) -> Dict[str, Any]:
-        """Get system configuration information"""
+        """
+        Gets system configuration information.
+
+        Returns:
+            A dictionary of system configuration information.
+        """
         return {
             "config_file": str(self.config_file),
             "sections": list(self.to_dict().keys()),
@@ -469,7 +670,7 @@ Optimization suggestions:"""
         }
     
     async def reset_to_defaults(self):
-        """Reset configuration to defaults"""
+        """Resets the configuration to its default values."""
         self.prompt = PromptConfig()
         self.memory = MemoryConfig()
         self.plugin = PluginConfig()
@@ -486,7 +687,16 @@ Optimization suggestions:"""
         logger.info("Configuration reset to defaults")
     
     async def backup_config(self, backup_name: str = None) -> str:
-        """Create a backup of current configuration"""
+        """
+        Creates a backup of the current configuration.
+
+        Args:
+            backup_name: An optional name for the backup file.
+
+        Returns:
+            The path to the backup file, or an empty string if the backup
+            failed.
+        """
         if not backup_name:
             backup_name = f"config_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
@@ -504,7 +714,15 @@ Optimization suggestions:"""
             return ""
     
     async def restore_config(self, backup_file: str) -> bool:
-        """Restore configuration from backup"""
+        """
+        Restores the configuration from a backup file.
+
+        Args:
+            backup_file: The path to the backup file.
+
+        Returns:
+            True if the configuration was restored successfully, False otherwise.
+        """
         backup_path = Path(backup_file)
         
         if not backup_path.exists():
@@ -533,14 +751,27 @@ unified_config = UnifiedConfig()
 
 
 async def get_config() -> UnifiedConfig:
-    """Get the global configuration instance"""
+    """
+    Gets the global configuration instance.
+
+    Returns:
+        The global UnifiedConfig instance.
+    """
     if not unified_config.config_data:
         await unified_config.initialize()
     return unified_config
 
 
 async def load_config(config_file: str = "config.yaml") -> UnifiedConfig:
-    """Load configuration from a specific file"""
+    """
+    Loads the configuration from a specific file.
+
+    Args:
+        config_file: The path to the configuration file.
+
+    Returns:
+        A new UnifiedConfig instance.
+    """
     config = UnifiedConfig(config_file)
     await config.initialize()
     return config

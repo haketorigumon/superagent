@@ -10,9 +10,29 @@ logger = logging.getLogger(__name__)
 
 
 class PluginSystem:
-    """Dynamic plugin system for infinite extensibility"""
+    """
+    A dynamic plugin system for infinite extensibility.
+
+    This class is responsible for discovering, loading, and managing plugins
+    within the AI system. It allows for the dynamic extension of the system's
+    capabilities without modifying the core codebase.
+
+    Attributes:
+        system: A reference to the main UnifiedSystem instance.
+        plugins_dir: The directory where plugins are located.
+        loaded_plugins: A dictionary of loaded plugin instances.
+        plugin_registry: A dictionary of discovered plugins and their metadata.
+        plugin_dependencies: A dictionary tracking plugin dependencies.
+    """
 
     def __init__(self, system, plugins_dir: str = "plugins"):
+        """
+        Initializes the PluginSystem.
+
+        Args:
+            system: A reference to the main UnifiedSystem instance.
+            plugins_dir: The directory where plugins are located.
+        """
         self.system = system
         self.plugins_dir = Path(plugins_dir)
         self.plugins_dir.mkdir(parents=True, exist_ok=True)
@@ -21,12 +41,17 @@ class PluginSystem:
         self.plugin_dependencies: Dict[str, Set[str]] = defaultdict(set)
 
     async def initialize(self):
-        """Initialize the plugin system"""
+        """
+        Initializes the plugin system.
+
+        This method discovers available plugins and loads a set of core plugins
+        that are essential for the system's operation.
+        """
         await self._discover_plugins()
         await self._load_core_plugins()
 
     async def _discover_plugins(self):
-        """Discover available plugins"""
+        """Discovers available plugins in the plugins directory."""
         for plugin_file in self.plugins_dir.glob("*.py"):
             if plugin_file.name.startswith("__"):
                 continue
@@ -47,7 +72,11 @@ class PluginSystem:
                 logger.error(f"Error discovering plugin {plugin_name}: {e}")
 
     async def _load_core_plugins(self):
-        """Load core system plugins"""
+        """
+        Loads the core system plugins.
+
+        If a core plugin is not found, it is generated from a template.
+        """
         core_plugins = [
             "task_executor",
             "capability_manager",
@@ -62,7 +91,16 @@ class PluginSystem:
                 await self._generate_core_plugin(plugin_name)
 
     async def _generate_core_plugin(self, plugin_name: str):
-        """Generate a core plugin if it doesn't exist"""
+        """
+        Generates a core plugin if it doesn't exist.
+
+        This method uses a set of predefined templates to create the Python
+        source code for core plugins. This ensures that the system has a
+        baseline set of capabilities even if no custom plugins are installed.
+
+        Args:
+            plugin_name: The name of the core plugin to generate.
+        """
         plugin_templates = {
             "task_executor": '''
 """Task Executor Plugin - Executes tasks with full flexibility"""
@@ -293,7 +331,18 @@ def create_plugin(system):
             await self.load_plugin(plugin_name)
 
     async def load_plugin(self, plugin_name: str) -> bool:
-        """Load a specific plugin"""
+        """
+        Loads a specific plugin.
+
+        This method loads the plugin's module, checks its dependencies, and
+        creates an instance of the plugin.
+
+        Args:
+            plugin_name: The name of the plugin to load.
+
+        Returns:
+            True if the plugin was loaded successfully, False otherwise.
+        """
         if plugin_name not in self.plugin_registry:
             return False
 
@@ -319,11 +368,25 @@ def create_plugin(system):
         return False
 
     async def get_plugin(self, plugin_name: str) -> Optional[Any]:
-        """Get a loaded plugin"""
+        """
+        Gets a loaded plugin by its name.
+
+        Args:
+            plugin_name: The name of the plugin to get.
+
+        Returns:
+            The plugin instance, or None if the plugin is not loaded.
+        """
         return self.loaded_plugins.get(plugin_name)
 
     async def list_plugins(self) -> Dict[str, Dict[str, Any]]:
-        """List all available plugins"""
+        """
+        Lists all available plugins.
+
+        Returns:
+            A dictionary of available plugins, including their metadata and
+            whether they are currently loaded.
+        """
         return {
             name: {
                 **info,

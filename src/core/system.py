@@ -14,9 +14,38 @@ logger = logging.getLogger(__name__)
 
 
 class UnifiedSystem:
-    """The ultimate unified AI agent system"""
+    """
+    The ultimate unified AI agent system.
+
+    This class is the central orchestrator of the entire system. It manages
+    entities, tasks, and core components such as the prompt engine, memory
+    system, and plugin system. It is responsible for initializing the system,
+    processing user requests, and managing the main event loop.
+
+    Attributes:
+        config: The system configuration.
+        llm_client: The client for interacting with the language model.
+        prompt_engine: The prompt engine for generating prompts.
+        memory_system: The persistent memory system.
+        plugin_system: The plugin system for extending capabilities.
+        entities: A dictionary of all entities in the system.
+        entity_types: A dictionary mapping entity types to sets of entity IDs.
+        is_initialized: A boolean indicating whether the system is initialized.
+        is_running: A boolean indicating whether the system is running.
+        system_metrics: A dictionary for tracking system metrics.
+        task_queue: A queue for pending tasks.
+        active_tasks: A dictionary of currently active tasks.
+        task_workers: A list of background task workers.
+    """
 
     def __init__(self, config, llm_client):
+        """
+        Initializes the UnifiedSystem.
+
+        Args:
+            config: The system configuration.
+            llm_client: The client for interacting with the language model.
+        """
         self.config = config
         self.llm_client = llm_client
 
@@ -40,7 +69,13 @@ class UnifiedSystem:
         self.task_workers: List[asyncio.Task] = []
 
     async def initialize(self):
-        """Initialize the unified system"""
+        """
+        Initializes the unified system.
+
+        This method initializes all the core components, starts the task
+        workers, and creates a system memory to record the initialization
+        event.
+        """
         logger.info("Initializing Unified AI Agent System...")
 
         # Initialize core components
@@ -73,7 +108,16 @@ class UnifiedSystem:
         logger.info("Unified system initialized successfully!")
 
     async def create_entity(self, entity_type: EntityType, **kwargs) -> str:
-        """Create a new entity"""
+        """
+        Creates a new entity in the system.
+
+        Args:
+            entity_type: The type of the entity to create.
+            **kwargs: Additional attributes for the entity.
+
+        Returns:
+            The ID of the newly created entity.
+        """
         entity = UniversalEntity(type=entity_type, **kwargs)
         self.entities[entity.id] = entity
         self.entity_types[entity_type].add(entity.id)
@@ -85,11 +129,30 @@ class UnifiedSystem:
         return entity.id
 
     async def get_entity(self, entity_id: str) -> Optional[UniversalEntity]:
-        """Get an entity by ID"""
+        """
+        Gets an entity by its ID.
+
+        Args:
+            entity_id: The ID of the entity to retrieve.
+
+        Returns:
+            The entity, or None if not found.
+        """
         return self.entities.get(entity_id)
 
     async def create_agent(self, **kwargs) -> str:
-        """Create a new agent entity"""
+        """
+        Creates a new agent entity.
+
+        This method creates a new agent, initializes it with a system prompt,
+        and stores its initialization in memory.
+
+        Args:
+            **kwargs: Additional attributes for the agent.
+
+        Returns:
+            The ID of the newly created agent.
+        """
         # Extract specific parameters to avoid conflicts
         name = kwargs.pop("name", f"agent_{uuid.uuid4().hex[:8]}")
         description = kwargs.pop("description", "Universal AI agent")
@@ -132,7 +195,16 @@ class UnifiedSystem:
         return agent_id
 
     async def create_task(self, content: str, **kwargs) -> str:
-        """Create a new task"""
+        """
+        Creates a new task and adds it to the task queue.
+
+        Args:
+            content: The content or description of the task.
+            **kwargs: Additional attributes for the task.
+
+        Returns:
+            The ID of the newly created task.
+        """
         # Extract specific parameters to avoid conflicts
         priority = kwargs.pop("priority", Priority.NORMAL)
 
@@ -150,7 +222,12 @@ class UnifiedSystem:
         return task_id
 
     async def _task_worker(self, worker_name: str):
-        """Task worker that processes tasks from the queue"""
+        """
+        A background worker that processes tasks from the queue.
+
+        Args:
+            worker_name: The name of the worker.
+        """
         while self.is_running:
             try:
                 task_id = await asyncio.wait_for(self.task_queue.get(), timeout=1.0)
@@ -169,7 +246,16 @@ class UnifiedSystem:
                 logger.error(f"Error in task worker {worker_name}: {e}")
 
     async def _execute_task(self, task_entity: UniversalEntity):
-        """Execute a task using the appropriate method"""
+        """
+        Executes a task using the appropriate method.
+
+        This method attempts to use the task executor plugin to execute the
+        task. If the plugin is not available, it falls back to a default
+        execution method.
+
+        Args:
+            task_entity: The task entity to execute.
+        """
         try:
             task_entity.state["status"] = "executing"
             task_entity.state["started_at"] = datetime.now().isoformat()
@@ -206,7 +292,15 @@ class UnifiedSystem:
             logger.error(f"Task execution failed: {e}")
 
     async def _fallback_task_execution(self, task_entity: UniversalEntity) -> str:
-        """Fallback task execution when no plugin is available"""
+        """
+        A fallback task execution method for when no plugin is available.
+
+        Args:
+            task_entity: The task entity to execute.
+
+        Returns:
+            The result of the task execution as a string.
+        """
         prompt = await self.prompt_engine.generate_prompt(
             "execute_task",
             {
@@ -219,7 +313,20 @@ class UnifiedSystem:
         return await self.llm_client.generate(prompt, "You are a helpful assistant.")
 
     async def process_user_request(self, user_id: str, request: str) -> Dict[str, Any]:
-        """Process a user request"""
+        """
+        Processes a user request.
+
+        This method creates a new task for the user's request and adds it to
+        the task queue.
+
+        Args:
+            user_id: The ID of the user making the request.
+            request: The user's request as a string.
+
+        Returns:
+            A dictionary containing the result of the request processing,
+            including the task ID.
+        """
         try:
             # Create task for the request
             task_id = await self.create_task(
@@ -246,7 +353,16 @@ class UnifiedSystem:
             }
 
     async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """Get the status of a task"""
+        """
+        Gets the status of a task.
+
+        Args:
+            task_id: The ID of the task.
+
+        Returns:
+            A dictionary containing the task's status, or None if the task is
+            not found.
+        """
         task = self.entities.get(task_id)
         if task and task.type == EntityType.TASK:
             return {
@@ -264,7 +380,17 @@ class UnifiedSystem:
 
     async def search_entities(self, entity_type: EntityType = None,
                             query: str = None, **filters) -> List[UniversalEntity]:
-        """Search entities with various filters"""
+        """
+        Searches for entities with various filters.
+
+        Args:
+            entity_type: An optional entity type to filter by.
+            query: An optional search query.
+            **filters: Additional filters to apply.
+
+        Returns:
+            A list of matching entities.
+        """
         results = []
 
         entities_to_search = self.entities.values()
@@ -280,7 +406,17 @@ class UnifiedSystem:
 
     def _entity_matches_filters(self, entity: UniversalEntity, query: str = None,
                               filters: Dict[str, Any] = None) -> bool:
-        """Check if entity matches search filters"""
+        """
+        Checks if an entity matches a set of search filters.
+
+        Args:
+            entity: The entity to check.
+            query: An optional search query.
+            filters: An optional dictionary of filters.
+
+        Returns:
+            True if the entity matches the filters, False otherwise.
+        """
         if query:
             query_lower = query.lower()
             if (
@@ -305,7 +441,12 @@ class UnifiedSystem:
         return True
 
     def get_system_status(self) -> Dict[str, Any]:
-        """Get comprehensive system status"""
+        """
+        Gets a comprehensive status of the system.
+
+        Returns:
+            A dictionary containing the system's status.
+        """
         return {
             "system": {
                 "initialized": self.is_initialized,
@@ -328,7 +469,7 @@ class UnifiedSystem:
         }
 
     async def shutdown(self):
-        """Shutdown the system gracefully"""
+        """Shuts down the system gracefully."""
         logger.info("Shutting down Unified AI Agent System...")
 
         self.is_running = False
