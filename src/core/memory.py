@@ -77,12 +77,12 @@ class PersistentMemorySystem:
         """Loads the persistent state from storage."""
         if self.storage_file.exists():
             try:
-                with open(self.storage_file, 'rb') as f:
+                with open(self.storage_file, "rb") as f:
                     data = pickle.load(f)
-                    self.persistent_storage = data.get('storage', {})
+                    self.persistent_storage = data.get("storage", {})
 
                     # Restore memory layers
-                    for layer_name, memories in data.get('memory_layers', {}).items():
+                    for layer_name, memories in data.get("memory_layers", {}).items():
                         layer = MemoryType(layer_name)
                         for memory_id, memory_data in memories.items():
                             entity = UniversalEntity.from_dict(memory_data)
@@ -91,7 +91,9 @@ class PersistentMemorySystem:
                     # Rebuild indices
                     await self._rebuild_indices()
 
-                logger.info(f"Loaded persistent state with {len(self.persistent_storage)} items")
+                logger.info(
+                    f"Loaded persistent state with {len(self.persistent_storage)} items"
+                )
             except Exception as e:
                 logger.error(f"Error loading persistent state: {e}")
 
@@ -99,18 +101,18 @@ class PersistentMemorySystem:
         """Saves the persistent state to storage."""
         try:
             data = {
-                'storage': self.persistent_storage,
-                'memory_layers': {
+                "storage": self.persistent_storage,
+                "memory_layers": {
                     layer.value: {
                         memory_id: memory.to_dict()
                         for memory_id, memory in memories.items()
                     }
                     for layer, memories in self.memory_layers.items()
                 },
-                'saved_at': datetime.now().isoformat()
+                "saved_at": datetime.now().isoformat(),
             }
 
-            with open(self.storage_file, 'wb') as f:
+            with open(self.storage_file, "wb") as f:
                 pickle.dump(data, f)
 
         except Exception as e:
@@ -145,7 +147,7 @@ class PersistentMemorySystem:
                 self.content_index[word].add(memory_id)
 
         # Temporal indexing
-        date_key = memory.created_at.strftime('%Y-%m-%d')
+        date_key = memory.created_at.strftime("%Y-%m-%d")
         self.temporal_index[date_key].append(memory_id)
 
         # Importance indexing
@@ -156,8 +158,9 @@ class PersistentMemorySystem:
         for tag in memory.tags:
             self.tag_index[tag].add(memory_id)
 
-    async def store_memory(self, entity: UniversalEntity,
-                          memory_type: MemoryType = MemoryType.WORKING) -> str:
+    async def store_memory(
+        self, entity: UniversalEntity, memory_type: MemoryType = MemoryType.WORKING
+    ) -> str:
         """
         Stores a memory in the specified layer.
 
@@ -200,8 +203,9 @@ class PersistentMemorySystem:
                 return memory
         return None
 
-    async def search_memories(self, query: str, context: Dict[str, Any] = None,
-                            limit: int = 10) -> List[UniversalEntity]:
+    async def search_memories(
+        self, query: str, context: Dict[str, Any] = None, limit: int = 10
+    ) -> List[UniversalEntity]:
         """
         Searches for memories using various criteria.
 
@@ -216,7 +220,6 @@ class PersistentMemorySystem:
         Returns:
             A list of the most relevant memory entities.
         """
-        results = []
         query_words = set(query.lower().split())
 
         # Content-based search
@@ -226,8 +229,8 @@ class PersistentMemorySystem:
                 matching_ids.update(self.content_index[word])
 
         # Tag-based search
-        if context and 'tags' in context:
-            for tag in context['tags']:
+        if context and "tags" in context:
+            for tag in context["tags"]:
                 if tag in self.tag_index:
                     matching_ids.update(self.tag_index[tag])
 
@@ -236,26 +239,21 @@ class PersistentMemorySystem:
         for memory_id in matching_ids:
             memory = await self.retrieve_memory(memory_id)
             if memory:
-                score = self._calculate_relevance_score(memory, query, context)
+                score = self._calculate_relevance_score(memory, query)
                 scored_memories.append((score, memory))
 
         # Sort by relevance and return top results
         scored_memories.sort(key=lambda x: x[0], reverse=True)
         return [memory for _, memory in scored_memories[:limit]]
 
-    def _calculate_relevance_score(self, memory: UniversalEntity, query: str,
-                                 context: Dict[str, Any] = None) -> float:
+    def _calculate_relevance_score(self, memory: UniversalEntity, query: str) -> float:
         """
         Calculates a relevance score for a memory.
-
-        The score is based on content relevance, importance, recency, and
-        access frequency.
-
+        The score is based on content relevance, importance, recency,
+        access frequency, and metadata matching.
         Args:
             memory: The memory entity to score.
             query: The search query.
-            context: An optional context dictionary.
-
         Returns:
             The relevance score as a float.
         """
@@ -268,8 +266,20 @@ class PersistentMemorySystem:
             content_overlap = len(query_words.intersection(content_words))
             score += content_overlap * 2.0
 
+        # Metadata relevance (tags, name)
+        tag_overlap = len(query_words.intersection(memory.tags))
+        score += tag_overlap * 3.0
+
+        if memory.name:
+            name_words = set(memory.name.lower().replace("_", " ").split())
+            name_overlap = len(query_words.intersection(name_words))
+            score += name_overlap * 1.5
+
         # Importance factor
         score += memory.importance * 1.5
+
+        # Priority factor
+        score += memory.priority.value * 0.1
 
         # Recency factor
         days_old = (datetime.now() - memory.updated_at).days
@@ -325,7 +335,8 @@ class PersistentMemorySystem:
         current_time = datetime.now()
         for layer, memories in self.memory_layers.items():
             expired_ids = [
-                memory_id for memory_id, memory in memories.items()
+                memory_id
+                for memory_id, memory in memories.items()
                 if memory.expires_at and memory.expires_at < current_time
             ]
             for memory_id in expired_ids:

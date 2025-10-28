@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional
 
+
 class LLMClient:
     """
     A mock LLM client for testing and demonstration purposes.
