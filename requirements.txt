@@ -4,3 +4,7 @@ aiofiles
 pyyaml
 pytest
 pytest-asyncio
+fastapi
+uvicorn
+httpx
+ruff

@@ -1,11 +1,11 @@
 import asyncio
-import asyncio
 import pytest
 import pytest_asyncio
 from src.core.system import UnifiedSystem
 from src.core.entities import EntityType, Priority, MemoryType
 from src.utils.unified_config import load_config
 from src.utils.llm.llm_client import LLMClient
+
 
 @pytest_asyncio.fixture
 async def unified_system():
@@ -21,6 +21,7 @@ async def unified_system():
     yield system
     await system.shutdown()
 
+
 @pytest.mark.asyncio
 async def test_system_initialization(unified_system: UnifiedSystem):
     """Tests if the UnifiedSystem initializes correctly."""
@@ -30,6 +31,7 @@ async def test_system_initialization(unified_system: UnifiedSystem):
     assert unified_system.prompt_engine is not None
     assert unified_system.memory_system is not None
     assert unified_system.plugin_system is not None
+
 
 @pytest.mark.asyncio
 async def test_create_agent(unified_system: UnifiedSystem):
@@ -44,6 +46,7 @@ async def test_create_agent(unified_system: UnifiedSystem):
     assert agent.type == EntityType.AGENT
     assert agent.name == "TestAgent"
     assert "testing" in agent.capabilities
+
 
 @pytest.mark.asyncio
 async def test_create_and_process_task(unified_system: UnifiedSystem):
@@ -63,6 +66,7 @@ async def test_create_and_process_task(unified_system: UnifiedSystem):
     assert task_status["content"] == task_content
     assert "simulated response" in task_status["result"]
 
+
 @pytest.mark.asyncio
 async def test_memory_storage_and_retrieval(unified_system: UnifiedSystem):
     """Tests the persistent memory system."""
@@ -76,13 +80,16 @@ async def test_memory_storage_and_retrieval(unified_system: UnifiedSystem):
 
     # Store it in persistent memory
     memory_entity = await unified_system.get_entity(memory_id)
-    await unified_system.memory_system.store_memory(memory_entity, MemoryType.PERSISTENT)
+    await unified_system.memory_system.store_memory(
+        memory_entity, MemoryType.PERSISTENT
+    )
 
     # Retrieve the memory
     retrieved_memory = await unified_system.memory_system.retrieve_memory(memory_id)
     assert retrieved_memory is not None
     assert retrieved_memory.content == memory_content
     assert "important" in retrieved_memory.tags
+
 
 @pytest.mark.asyncio
 async def test_search_memories(unified_system: UnifiedSystem):
@@ -109,8 +116,11 @@ async def test_search_memories(unified_system: UnifiedSystem):
     assert len(search_results_by_tag) > 0
     assert "search_test" in search_results_by_tag[0].tags
 
+
 @pytest.mark.asyncio
-async def test_search_entity_with_none_attributes_does_not_crash(unified_system: UnifiedSystem):
+async def test_search_entity_with_none_attributes_does_not_crash(
+    unified_system: UnifiedSystem,
+):
     """
     Tests that searching entities does not crash when an entity has None for name or description.
     """
@@ -119,7 +129,7 @@ async def test_search_entity_with_none_attributes_does_not_crash(unified_system:
         EntityType.RESOURCE,
         name="A completely different thing",
         description=None,
-        content="Nothing to see here."
+        content="Nothing to see here.",
     )
 
     # This entity should match the search
@@ -127,7 +137,7 @@ async def test_search_entity_with_none_attributes_does_not_crash(unified_system:
         EntityType.RESOURCE,
         name="Another thing",
         description="This contains the magic word.",
-        content="Some other content."
+        content="Some other content.",
     )
 
     try:
@@ -138,3 +148,55 @@ async def test_search_entity_with_none_attributes_does_not_crash(unified_system:
         assert results[0].name == "Another thing"
     except AttributeError as e:
         pytest.fail(f"Searching with None attribute raised an exception: {e}")
+
+
+@pytest.mark.asyncio
+async def test_complex_task_execution(unified_system: UnifiedSystem):
+    """Tests that a complex task is broken down into a plan and executed."""
+    task_content = "First, do step 1, and then do step 2."
+    task_id = await unified_system.create_task(
+        content=task_content,
+        priority=Priority.HIGH,
+    )
+
+    # Give the system time to process the task
+    await asyncio.sleep(2)
+
+    task_status = await unified_system.get_task_status(task_id)
+    assert task_status is not None
+    assert task_status["status"] == "completed"
+    assert "plan" in task_status["result"]
+
+
+@pytest.mark.asyncio
+async def test_memory_search_with_metadata(unified_system: UnifiedSystem):
+    """Tests that memory search is influenced by metadata."""
+    # Create two memories with similar content but different metadata
+    await unified_system.create_entity(
+        EntityType.MEMORY,
+        name="low_priority_memory",
+        content="This is a test memory.",
+        tags={"generic"},
+        priority=Priority.LOW,
+        importance=0.5,
+    )
+    await unified_system.create_entity(
+        EntityType.MEMORY,
+        name="high_priority_memory",
+        content="This is also a test memory.",
+        tags={"specific_test"},
+        priority=Priority.HIGH,
+        importance=0.9,
+    )
+
+    # Give them a moment to be indexed
+    await asyncio.sleep(0.1)
+
+    # Search for a term present in both, but also in the tags of the second memory
+    search_results = await unified_system.memory_system.search_memories(
+        "test specific_test"
+    )
+
+    # The second memory should be ranked higher due to the tag and priority
+    assert len(search_results) > 0
+    assert search_results[0].name == "high_priority_memory"

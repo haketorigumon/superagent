@@ -12,6 +12,7 @@ class EntityType(Enum):
     This enum defines the various types of entities that can exist within the Unified AI Agent System.
     Each entity type represents a distinct category of object with specific roles and functionalities.
     """
+
     AGENT = "agent"
     TASK = "task"
     MESSAGE = "message"
@@ -33,6 +34,7 @@ class Priority(Enum):
     This enum provides a standardized way to assign importance and urgency to entities,
     particularly tasks, ensuring that critical operations are handled first.
     """
+
     CRITICAL = 10
     HIGH = 8
     NORMAL = 5
@@ -48,13 +50,14 @@ class MemoryType(Enum):
     ranging from short-term working memory to long-term persistent storage.
     Each type serves a different purpose in the agent's cognitive architecture.
     """
-    WORKING = "working"      # Immediate context
-    EPISODIC = "episodic"    # Specific experiences
-    SEMANTIC = "semantic"    # General knowledge
-    PROCEDURAL = "procedural" # How-to knowledge
-    META = "meta"           # Self-awareness
-    COLLECTIVE = "collective" # Shared knowledge
-    PERSISTENT = "persistent" # Long-term storage
+
+    WORKING = "working"  # Immediate context
+    EPISODIC = "episodic"  # Specific experiences
+    SEMANTIC = "semantic"  # General knowledge
+    PROCEDURAL = "procedural"  # How-to knowledge
+    META = "meta"  # Self-awareness
+    COLLECTIVE = "collective"  # Shared knowledge
+    PERSISTENT = "persistent"  # Long-term storage
 
 
 @dataclass
@@ -85,6 +88,7 @@ class UniversalEntity:
         expires_at: An optional timestamp when the entity should expire.
         tags: A set of tags for categorizing and searching for the entity.
     """
+
     id: str = field(default_factory=lambda: f"entity_{uuid.uuid4().hex[:8]}")
     type: EntityType = EntityType.AGENT
     name: str = ""
@@ -178,19 +182,19 @@ class UniversalEntity:
         """
         return {
             **asdict(self),
-            'type': self.type.value,
-            'priority': self.priority.name,
-            'capabilities': list(self.capabilities),
-            'relationships': {k: list(v) for k, v in self.relationships.items()},
-            'tags': list(self.tags),
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat(),
-            'accessed_at': self.accessed_at.isoformat(),
-            'expires_at': self.expires_at.isoformat() if self.expires_at else None
+            "type": self.type.value,
+            "priority": self.priority.name,
+            "capabilities": list(self.capabilities),
+            "relationships": {k: list(v) for k, v in self.relationships.items()},
+            "tags": list(self.tags),
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "accessed_at": self.accessed_at.isoformat(),
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalEntity':
+    def from_dict(cls, data: Dict[str, Any]) -> "UniversalEntity":
         """
         Creates an entity from a dictionary.
 
@@ -205,14 +209,16 @@ class UniversalEntity:
         Returns:
             A UniversalEntity object.
         """
-        data['type'] = EntityType(data['type'])
-        data['priority'] = Priority[data['priority']]
-        data['capabilities'] = set(data.get('capabilities', []))
-        data['relationships'] = {k: set(v) for k, v in data.get('relationships', {}).items()}
-        data['tags'] = set(data.get('tags', []))
-        data['created_at'] = datetime.fromisoformat(data['created_at'])
-        data['updated_at'] = datetime.fromisoformat(data['updated_at'])
-        data['accessed_at'] = datetime.fromisoformat(data['accessed_at'])
-        if data.get('expires_at'):
-            data['expires_at'] = datetime.fromisoformat(data['expires_at'])
+        data["type"] = EntityType(data["type"])
+        data["priority"] = Priority[data["priority"]]
+        data["capabilities"] = set(data.get("capabilities", []))
+        data["relationships"] = {
+            k: set(v) for k, v in data.get("relationships", {}).items()
+        }
+        data["tags"] = set(data.get("tags", []))
+        data["created_at"] = datetime.fromisoformat(data["created_at"])
+        data["updated_at"] = datetime.fromisoformat(data["updated_at"])
+        data["accessed_at"] = datetime.fromisoformat(data["accessed_at"])
+        if data.get("expires_at"):
+            data["expires_at"] = datetime.fromisoformat(data["expires_at"])
         return cls(**data)

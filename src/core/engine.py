@@ -1,9 +1,10 @@
 import json
 import hashlib
 import logging
+import re
 from pathlib import Path
 from collections import defaultdict
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 
 import aiofiles
 
@@ -39,7 +40,6 @@ class PromptEngine:
         self.system_dir = Path(system_dir)
         self.templates: Dict[str, str] = {}
         self.system_prompts: Dict[str, str] = {}
-        self.generation_history: List[Dict[str, Any]] = []
         self.optimization_data: Dict[str, Dict[str, Any]] = defaultdict(dict)
 
     async def initialize(self):
@@ -60,14 +60,14 @@ class PromptEngine:
         """Loads existing templates from the templates directory."""
         for template_file in self.templates_dir.glob("*.txt"):
             template_name = template_file.stem
-            async with aiofiles.open(template_file, 'r', encoding='utf-8') as f:
+            async with aiofiles.open(template_file, "r", encoding="utf-8") as f:
                 self.templates[template_name] = await f.read()
 
     async def _load_system_prompts(self):
         """Loads system prompts from the system directory."""
         for prompt_file in self.system_dir.glob("*.txt"):
             prompt_name = prompt_file.stem
-            async with aiofiles.open(prompt_file, 'r', encoding='utf-8') as f:
+            async with aiofiles.open(prompt_file, "r", encoding="utf-8") as f:
                 self.system_prompts[prompt_name] = await f.read()
 
     async def _initialize_core_prompts(self):
@@ -93,7 +93,6 @@ Current State: {state}
 Task: {task}
 
 Process this request using your full potential and provide a comprehensive response.""",
-
             "task_planner": """You are an advanced task planning system with unlimited planning capabilities.
 
 Your role:
@@ -109,7 +108,6 @@ Constraints: {constraints}
 Context: {context}
 
 Create a comprehensive execution plan.""",
-
             "capability_generator": """You are a capability generation system that can create any needed capability.
 
 Your function:
@@ -125,7 +123,6 @@ Context: {context}
 Constraints: {constraints}
 
 Generate the required capability specification.""",
-
             "memory_consolidator": """You are a memory consolidation system that manages infinite context.
 
 Your responsibilities:
@@ -140,7 +137,6 @@ Context: {context}
 Importance Threshold: {threshold}
 
 Consolidate these memories effectively.""",
-
             "system_evolver": """You are a system evolution engine that continuously improves the architecture.
 
 Your mission:
@@ -155,7 +151,7 @@ Performance Metrics: {metrics}
 Improvement Goals: {goals}
 Constraints: {constraints}
 
-Propose system evolution steps."""
+Propose system evolution steps.""",
         }
 
         for name, prompt in core_prompts.items():
@@ -172,7 +168,7 @@ Propose system evolution steps."""
             template: The content of the template.
         """
         template_file = self.templates_dir / f"{name}.txt"
-        async with aiofiles.open(template_file, 'w', encoding='utf-8') as f:
+        async with aiofiles.open(template_file, "w", encoding="utf-8") as f:
             await f.write(template)
 
     async def _save_system_prompt(self, name: str, prompt: str):
@@ -184,11 +180,12 @@ Propose system evolution steps."""
             prompt: The content of the system prompt.
         """
         prompt_file = self.system_dir / f"{name}.txt"
-        async with aiofiles.open(prompt_file, 'w', encoding='utf-8') as f:
+        async with aiofiles.open(prompt_file, "w", encoding="utf-8") as f:
             await f.write(prompt)
 
-    async def generate_prompt(self, purpose: str, context: Dict[str, Any],
-                            llm_client=None) -> str:
+    async def generate_prompt(
+        self, purpose: str, context: Dict[str, Any], llm_client=None
+    ) -> str:
         """
         Generates a prompt dynamically based on a purpose and context.
 
@@ -212,7 +209,7 @@ Propose system evolution steps."""
             return await self._apply_prompt(purpose, context, is_system=True)
 
         # Check for existing template
-        template_name = self._find_suitable_template(purpose, context)
+        template_name = self._find_suitable_template(purpose)
         if template_name:
             return await self._apply_prompt(template_name, context)
 
@@ -228,7 +225,7 @@ Propose system evolution steps."""
         # Fallback to basic prompt
         return await self._create_fallback_prompt(purpose, context)
 
-    def _find_suitable_template(self, purpose: str, context: Dict[str, Any]) -> Optional[str]:
+    def _find_suitable_template(self, purpose: str) -> Optional[str]:
         """
         Finds the most suitable existing template for a given purpose.
 
@@ -237,8 +234,6 @@ Propose system evolution steps."""
 
         Args:
             purpose: The purpose for which to find a template.
-            context: The context, which is not used in this implementation but
-                     is included for future enhancements.
 
         Returns:
             The name of the best-matching template, or None if no suitable
@@ -249,7 +244,7 @@ Propose system evolution steps."""
         best_score = 0
 
         for template_name in self.templates.keys():
-            template_words = set(template_name.lower().replace('_', ' ').split())
+            template_words = set(template_name.lower().replace("_", " ").split())
             score = len(purpose_words.intersection(template_words))
             if score > best_score:
                 best_score = score
@@ -257,8 +252,9 @@ Propose system evolution steps."""
 
         return best_match if best_score > 0 else None
 
-    async def _generate_new_prompt(self, purpose: str, context: Dict[str, Any],
-                                 llm_client) -> Optional[str]:
+    async def _generate_new_prompt(
+        self, purpose: str, context: Dict[str, Any], llm_client
+    ) -> Optional[str]:
         """
         Generates a new prompt using an LLM.
 
@@ -293,26 +289,22 @@ Generate the prompt:"""
             prompt_context = {
                 "purpose": purpose,
                 "context": json.dumps(context, indent=2),
-                "requirements": context.get("requirements", "General purpose prompt")
+                "requirements": context.get("requirements", "General purpose prompt"),
             }
 
             filled_prompt = meta_prompt.format(**prompt_context)
-            response = await llm_client.generate(filled_prompt, "You are a helpful assistant.")
-
-            self.generation_history.append({
-                "purpose": purpose,
-                "context": context,
-                "generated_at": datetime.now().isoformat(),
-                "success": bool(response)
-            })
+            response = await llm_client.generate(
+                filled_prompt, "You are a helpful assistant."
+            )
 
             return response
         except Exception as e:
             logger.error(f"Error generating prompt: {e}")
             return None
 
-    async def _apply_prompt(self, prompt_name: str, context: Dict[str, Any],
-                          is_system: bool = False) -> str:
+    async def _apply_prompt(
+        self, prompt_name: str, context: Dict[str, Any], is_system: bool = False
+    ) -> str:
         """
         Applies context to a prompt.
 
@@ -335,8 +327,7 @@ Generate the prompt:"""
 
         try:
             # Extract parameters from prompt
-            import re
-            parameters = set(re.findall(r'\{(\w+)\}', prompt))
+            parameters = set(re.findall(r"\{(\w+)\}", prompt))
 
             # Fill in available parameters
             filled_context = {}
@@ -355,7 +346,9 @@ Generate the prompt:"""
             logger.error(f"Error applying prompt: {e}")
             return f"Error applying prompt: {e}"
 
-    async def _create_fallback_prompt(self, purpose: str, context: Dict[str, Any]) -> str:
+    async def _create_fallback_prompt(
+        self, purpose: str, context: Dict[str, Any]
+    ) -> str:
         """
         Creates a basic fallback prompt.
 

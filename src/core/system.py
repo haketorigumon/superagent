@@ -3,7 +3,7 @@ import logging
 import uuid
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Callable, Set
+from typing import Dict, List, Any, Optional, Set
 
 from src.core.entities import UniversalEntity, EntityType, Priority, MemoryType
 from src.core.engine import PromptEngine
@@ -61,7 +61,6 @@ class UnifiedSystem:
         # System state
         self.is_initialized = False
         self.is_running = False
-        self.system_metrics: Dict[str, Any] = defaultdict(int)
 
         # Task management
         self.task_queue: asyncio.Queue = asyncio.Queue()
@@ -97,9 +96,9 @@ class UnifiedSystem:
             metadata={
                 "event": "system_start",
                 "timestamp": datetime.now().isoformat(),
-                "config": self.config.to_dict()
+                "config": self.config.to_dict(),
             },
-            importance=1.0
+            importance=1.0,
         )
         await self.memory_system.store_memory(system_memory, MemoryType.PERSISTENT)
 
@@ -140,23 +139,29 @@ class UnifiedSystem:
         """
         return self.entities.get(entity_id)
 
-    async def create_agent(self, **kwargs) -> str:
+    async def create_agent(
+        self,
+        name: str = None,
+        description: str = "Universal AI agent",
+        capabilities: Set[str] = None,
+        **kwargs,
+    ) -> str:
         """
         Creates a new agent entity.
-
         This method creates a new agent, initializes it with a system prompt,
         and stores its initialization in memory.
-
         Args:
+            name: The name of the agent.
+            description: A description of the agent.
+            capabilities: A set of capabilities for the agent.
             **kwargs: Additional attributes for the agent.
-
         Returns:
             The ID of the newly created agent.
         """
-        # Extract specific parameters to avoid conflicts
-        name = kwargs.pop("name", f"agent_{uuid.uuid4().hex[:8]}")
-        description = kwargs.pop("description", "Universal AI agent")
-        capabilities = set(kwargs.pop("capabilities", ["reasoning", "communication"]))
+        if name is None:
+            name = f"agent_{uuid.uuid4().hex[:8]}"
+        if capabilities is None:
+            capabilities = {"reasoning", "communication"}
 
         agent_id = await self.create_entity(
             EntityType.AGENT,
@@ -164,7 +169,7 @@ class UnifiedSystem:
             description=description,
             capabilities=capabilities,
             state={"status": "active", "created_at": datetime.now().isoformat()},
-            **kwargs
+            **kwargs,
         )
 
         # Initialize agent with system prompt
@@ -175,8 +180,8 @@ class UnifiedSystem:
                 "context": agent.metadata,
                 "capabilities": list(agent.capabilities),
                 "state": agent.state,
-                "task": "Initialize as a universal AI agent"
-            }
+                "task": "Initialize as a universal AI agent",
+            },
         )
 
         # Store agent initialization in memory
@@ -186,34 +191,32 @@ class UnifiedSystem:
             metadata={
                 "agent_id": agent_id,
                 "initialization_prompt": agent_prompt,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             },
-            importance=0.8
+            importance=0.8,
         )
         await self.memory_system.store_memory(init_memory, MemoryType.EPISODIC)
 
         return agent_id
 
-    async def create_task(self, content: str, **kwargs) -> str:
+    async def create_task(
+        self, content: str, priority: Priority = Priority.NORMAL, **kwargs
+    ) -> str:
         """
         Creates a new task and adds it to the task queue.
-
         Args:
             content: The content or description of the task.
+            priority: The priority of the task.
             **kwargs: Additional attributes for the task.
-
         Returns:
             The ID of the newly created task.
         """
-        # Extract specific parameters to avoid conflicts
-        priority = kwargs.pop("priority", Priority.NORMAL)
-
         task_id = await self.create_entity(
             EntityType.TASK,
             content=content,
             state={"status": "pending", "created_at": datetime.now().isoformat()},
             priority=priority,
-            **kwargs
+            **kwargs,
         )
 
         # Add to task queue
@@ -279,11 +282,13 @@ class UnifiedSystem:
                 metadata={
                     "task_id": task_entity.id,
                     "result": result,
-                    "execution_time": task_entity.state.get("completed_at")
+                    "execution_time": task_entity.state.get("completed_at"),
                 },
-                importance=0.6
+                importance=0.6,
             )
-            await self.memory_system.store_memory(completion_memory, MemoryType.EPISODIC)
+            await self.memory_system.store_memory(
+                completion_memory, MemoryType.EPISODIC
+            )
 
         except Exception as e:
             task_entity.state["status"] = "failed"
@@ -306,8 +311,8 @@ class UnifiedSystem:
             {
                 "task": task_entity.content,
                 "context": task_entity.metadata,
-                "capabilities": list(task_entity.capabilities)
-            }
+                "capabilities": list(task_entity.capabilities),
+            },
         )
 
         return await self.llm_client.generate(prompt, "You are a helpful assistant.")
@@ -334,23 +339,20 @@ class UnifiedSystem:
                 metadata={
                     "user_id": user_id,
                     "request_type": "user_request",
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 },
-                priority=Priority.HIGH
+                priority=Priority.HIGH,
             )
 
             return {
                 "success": True,
                 "task_id": task_id,
-                "message": "Request queued for processing"
+                "message": "Request queued for processing",
             }
 
         except Exception as e:
             logger.error(f"Error processing user request: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -374,12 +376,13 @@ class UnifiedSystem:
                 "created_at": task.state.get("created_at"),
                 "started_at": task.state.get("started_at"),
                 "completed_at": task.state.get("completed_at"),
-                "failed_at": task.state.get("failed_at")
+                "failed_at": task.state.get("failed_at"),
             }
         return None
 
-    async def search_entities(self, entity_type: EntityType = None,
-                            query: str = None, **filters) -> List[UniversalEntity]:
+    async def search_entities(
+        self, entity_type: EntityType = None, query: str = None, **filters
+    ) -> List[UniversalEntity]:
         """
         Searches for entities with various filters.
 
@@ -404,8 +407,9 @@ class UnifiedSystem:
 
         return results
 
-    def _entity_matches_filters(self, entity: UniversalEntity, query: str = None,
-                              filters: Dict[str, Any] = None) -> bool:
+    def _entity_matches_filters(
+        self, entity: UniversalEntity, query: str = None, filters: Dict[str, Any] = None
+    ) -> bool:
         """
         Checks if an entity matches a set of search filters.
 
@@ -420,9 +424,15 @@ class UnifiedSystem:
         if query:
             query_lower = query.lower()
             if (
-                (entity.name is None or query_lower not in entity.name.lower()) and
-                (entity.content is None or query_lower not in str(entity.content).lower()) and
-                (entity.description is None or query_lower not in entity.description.lower())
+                (entity.name is None or query_lower not in entity.name.lower())
+                and (
+                    entity.content is None
+                    or query_lower not in str(entity.content).lower()
+                )
+                and (
+                    entity.description is None
+                    or query_lower not in entity.description.lower()
+                )
             ):
                 return False
 
@@ -462,10 +472,9 @@ class UnifiedSystem:
                 "memory_layers": {
                     layer.value: len(memories)
                     for layer, memories in self.memory_system.memory_layers.items()
-                }
+                },
             },
-            "metrics": dict(self.system_metrics),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def shutdown(self):
@@ -480,7 +489,9 @@ class UnifiedSystem:
 
         # Wait for active tasks to complete
         if self.active_tasks:
-            logger.info(f"Waiting for {len(self.active_tasks)} active tasks to complete...")
+            logger.info(
+                f"Waiting for {len(self.active_tasks)} active tasks to complete..."
+            )
             await asyncio.sleep(2)  # Give tasks time to finish
 
         # Cleanup memory system
@@ -493,9 +504,9 @@ class UnifiedSystem:
             metadata={
                 "event": "system_shutdown",
                 "timestamp": datetime.now().isoformat(),
-                "final_status": self.get_system_status()
+                "final_status": self.get_system_status(),
             },
-            importance=1.0
+            importance=1.0,
         )
         await self.memory_system.store_memory(shutdown_memory, MemoryType.PERSISTENT)
 
