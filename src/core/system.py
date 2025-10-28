@@ -39,10 +39,6 @@ class UnifiedSystem:
         self.active_tasks: Dict[str, UniversalEntity] = {}
         self.task_workers: List[asyncio.Task] = []
 
-        # Communication
-        self.message_queue: asyncio.Queue = asyncio.Queue()
-        self.message_handlers: Dict[str, Callable] = {}
-
     async def initialize(self):
         """Initialize the unified system"""
         logger.info("Initializing Unified AI Agent System...")
@@ -57,9 +53,6 @@ class UnifiedSystem:
         for i in range(num_workers):
             worker = asyncio.create_task(self._task_worker(f"worker_{i}"))
             self.task_workers.append(worker)
-
-        # Start message handler
-        asyncio.create_task(self._message_handler())
 
         # Create system memory
         system_memory = UniversalEntity(
@@ -94,22 +87,6 @@ class UnifiedSystem:
     async def get_entity(self, entity_id: str) -> Optional[UniversalEntity]:
         """Get an entity by ID"""
         return self.entities.get(entity_id)
-
-    async def update_entity(self, entity_id: str, **kwargs) -> bool:
-        """Update an entity"""
-        if entity_id in self.entities:
-            self.entities[entity_id].update(**kwargs)
-            return True
-        return False
-
-    async def delete_entity(self, entity_id: str) -> bool:
-        """Delete an entity"""
-        if entity_id in self.entities:
-            entity = self.entities[entity_id]
-            del self.entities[entity_id]
-            self.entity_types[entity.type].discard(entity_id)
-            return True
-        return False
 
     async def create_agent(self, **kwargs) -> str:
         """Create a new agent entity"""
@@ -240,47 +217,6 @@ class UnifiedSystem:
         )
 
         return await self.llm_client.generate(prompt, "You are a helpful assistant.")
-
-    async def _message_handler(self):
-        """Handle messages between entities"""
-        while self.is_running:
-            try:
-                message = await asyncio.wait_for(self.message_queue.get(), timeout=1.0)
-                await self._process_message(message)
-            except asyncio.TimeoutError:
-                continue
-            except Exception as e:
-                logger.error(f"Error in message handler: {e}")
-
-    async def _process_message(self, message: UniversalEntity):
-        """Process a message"""
-        message_type = message.metadata.get("message_type", "general")
-
-        if message_type in self.message_handlers:
-            await self.message_handlers[message_type](message)
-        else:
-            # Default message processing
-            logger.info(f"Received message: {message.content}")
-
-    async def send_message(self, content: str, sender_id: str, recipient_id: str = None,
-                          message_type: str = "general", **kwargs) -> str:
-        """Send a message"""
-        message_id = await self.create_entity(
-            EntityType.MESSAGE,
-            content=content,
-            metadata={
-                "sender_id": sender_id,
-                "recipient_id": recipient_id,
-                "message_type": message_type,
-                "timestamp": datetime.now().isoformat(),
-                **kwargs
-            }
-        )
-
-        message = self.entities[message_id]
-        await self.message_queue.put(message)
-
-        return message_id
 
     async def process_user_request(self, user_id: str, request: str) -> Dict[str, Any]:
         """Process a user request"""

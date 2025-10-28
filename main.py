@@ -8,7 +8,6 @@ Completely prompt-driven, plugin-based, and self-evolving system
 import asyncio
 import typer
 import logging
-from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -16,7 +15,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from typing import Optional, List
 
 from src.core.system import UnifiedSystem
-from src.core.entities import EntityType, Priority
+from src.core.entities import EntityType
 from src.utils.unified_config import load_config
 from src.utils.llm.llm_client import LLMClient
 
@@ -36,7 +35,7 @@ app = typer.Typer(
 
 @app.command()
 def start(
-    config_file: str = typer.Option("unified_config.yaml", help="Configuration file path"),
+    config_file: str = typer.Option("config.yaml", help="Configuration file path"),
     provider: Optional[str] = typer.Option(None, help="LLM provider override"),
     model: Optional[str] = typer.Option(None, help="Model name override"),
     api_key: Optional[str] = typer.Option(None, help="API key override"),
@@ -358,7 +357,7 @@ async def _handle_list_command(system: UnifiedSystem, command: str):
 
 @app.command()
 def config(
-    config_file: str = typer.Option("unified_config.yaml", help="Configuration file path"),
+    config_file: str = typer.Option("config.yaml", help="Configuration file path"),
     show: bool = typer.Option(False, help="Show current configuration"),
     reset: bool = typer.Option(False, help="Reset to default configuration"),
     backup: bool = typer.Option(False, help="Create configuration backup"),
@@ -444,7 +443,7 @@ def providers():
         table.add_row(provider, description, api_key)
     
     console.print(table)
-    console.print("\n[dim]💡 Example: unified_main.py start --provider openai --model gpt-4[/dim]")
+    console.print("\n[dim]💡 Example: main.py start --provider openai --model gpt-4[/dim]")
 
 
 @app.command()
@@ -452,7 +451,7 @@ def test_connection(
     provider: str = typer.Option("ollama", help="Provider to test"),
     model: str = typer.Option("llama3", help="Model to test"),
     api_key: Optional[str] = typer.Option(None, help="API key for testing"),
-    config_file: str = typer.Option("unified_config.yaml", help="Configuration file path")
+    config_file: str = typer.Option("config.yaml", help="Configuration file path")
 ):
     """Test connection to an LLM provider"""
     asyncio.run(_test_connection(provider, model, api_key, config_file))

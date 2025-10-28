@@ -10,7 +10,7 @@ from src.utils.llm.llm_client import LLMClient
 @pytest_asyncio.fixture
 async def unified_system():
     """Provides a fully initialized UnifiedSystem instance for testing."""
-    config = await load_config("unified_config.yaml")
+    config = await load_config("config.yaml")
     llm_client = LLMClient(
         provider=config.llm.provider,
         model=config.llm.model,
