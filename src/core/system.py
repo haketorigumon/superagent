@@ -347,9 +347,11 @@ class UnifiedSystem:
         """Check if entity matches search filters"""
         if query:
             query_lower = query.lower()
-            if (query_lower not in entity.name.lower() and
-                query_lower not in str(entity.content).lower() and
-                query_lower not in entity.description.lower()):
+            if (
+                (entity.name is None or query_lower not in entity.name.lower()) and
+                (entity.content is None or query_lower not in str(entity.content).lower()) and
+                (entity.description is None or query_lower not in entity.description.lower())
+            ):
                 return False
 
         if filters:

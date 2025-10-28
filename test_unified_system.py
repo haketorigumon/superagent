@@ -108,3 +108,33 @@ async def test_search_memories(unified_system: UnifiedSystem):
     )
     assert len(search_results_by_tag) > 0
     assert "search_test" in search_results_by_tag[0].tags
+
+@pytest.mark.asyncio
+async def test_search_entity_with_none_attributes_does_not_crash(unified_system: UnifiedSystem):
+    """
+    Tests that searching entities does not crash when an entity has None for name or description.
+    """
+    # This entity should not match the search, but has description=None which could cause a crash
+    await unified_system.create_entity(
+        EntityType.RESOURCE,
+        name="A completely different thing",
+        description=None,
+        content="Nothing to see here."
+    )
+
+    # This entity should match the search
+    await unified_system.create_entity(
+        EntityType.RESOURCE,
+        name="Another thing",
+        description="This contains the magic word.",
+        content="Some other content."
+    )
+
+    try:
+        # This search should trigger the check on the entity with description=None
+        results = await unified_system.search_entities(query="magic")
+        # We should find one result
+        assert len(results) == 1
+        assert results[0].name == "Another thing"
+    except AttributeError as e:
+        pytest.fail(f"Searching with None attribute raised an exception: {e}")
