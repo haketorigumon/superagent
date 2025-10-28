@@ -44,7 +44,22 @@ def start(
     port: int = typer.Option(12000, help="Web interface port"),
     debug: bool = typer.Option(False, help="Enable debug mode")
 ):
-    """Start the unified AI agent system"""
+    """
+    Starts the unified AI agent system.
+
+    This is the main entry point for running the system. It initializes the
+    system, loads the configuration, and starts the interactive mode.
+
+    Args:
+        config_file: The path to the configuration file.
+        provider: An optional override for the LLM provider.
+        model: An optional override for the LLM model.
+        api_key: An optional override for the API key.
+        web_interface: A boolean indicating whether to enable the web interface.
+        host: The host for the web interface.
+        port: The port for the web interface.
+        debug: A boolean indicating whether to enable debug mode.
+    """
     if debug:
         logging.getLogger().setLevel(logging.DEBUG)
     
@@ -62,7 +77,22 @@ def start(
 
 async def _start_system(config_file: str, provider: Optional[str], model: Optional[str], 
                        api_key: Optional[str], web_interface: bool, host: str, port: int):
-    """Start the unified system"""
+    """
+    Starts the unified system.
+
+    This function loads the configuration, initializes the LLM client, and
+    starts the main system. It also provides a progress bar to show the
+    initialization progress.
+
+    Args:
+        config_file: The path to the configuration file.
+        provider: An optional override for the LLM provider.
+        model: An optional override for the LLM model.
+        api_key: An optional override for the API key.
+        web_interface: A boolean indicating whether to enable the web interface.
+        host: The host for the web interface.
+        port: The port for the web interface.
+    """
     
     with Progress(
         SpinnerColumn(),
@@ -133,7 +163,12 @@ async def _start_system(config_file: str, provider: Optional[str], model: Option
 
 
 def _display_system_status(status: dict):
-    """Display system status in a nice table"""
+    """
+    Displays the system status in a formatted table.
+
+    Args:
+        status: A dictionary containing the system status.
+    """
     table = Table(title="System Status", show_header=True, header_style="bold magenta")
     table.add_column("Component", style="cyan")
     table.add_column("Status", style="green")
@@ -174,7 +209,16 @@ def _display_system_status(status: dict):
 
 
 async def _interactive_mode(system: UnifiedSystem):
-    """Interactive mode for the unified system"""
+    """
+    Runs the interactive mode for the unified system.
+
+    This function provides a command-line interface for interacting with the
+    system. It allows users to create agents, list entities, and process
+    general requests.
+
+    Args:
+        system: An instance of the UnifiedSystem.
+    """
     console.print("\n[bold green]🎯 Interactive Mode[/bold green]")
     console.print("[dim]Type 'help' for commands, 'exit' to quit[/dim]\n")
     
@@ -250,7 +294,7 @@ async def _interactive_mode(system: UnifiedSystem):
 
 
 def _show_help():
-    """Show help information"""
+    """Shows the help information for the interactive mode."""
     help_table = Table(title="Available Commands", show_header=True, header_style="bold cyan")
     help_table.add_column("Command", style="green")
     help_table.add_column("Description", style="dim")
@@ -273,7 +317,13 @@ def _show_help():
 
 
 async def _handle_create_agent(system: UnifiedSystem, command: str):
-    """Handle create agent command"""
+    """
+    Handles the 'create agent' command from the interactive mode.
+
+    Args:
+        system: An instance of the UnifiedSystem.
+        command: The command string.
+    """
     parts = command.split()
     agent_name = parts[2] if len(parts) > 2 else f"agent_{len(system.entities) + 1}"
     
@@ -289,7 +339,13 @@ async def _handle_create_agent(system: UnifiedSystem, command: str):
 
 
 async def _handle_list_command(system: UnifiedSystem, command: str):
-    """Handle list commands"""
+    """
+    Handles the 'list' command from the interactive mode.
+
+    Args:
+        system: An instance of the UnifiedSystem.
+        command: The command string.
+    """
     parts = command.split()
     if len(parts) < 2:
         console.print("[red]Usage: list [agents|tasks|entities][/red]")
@@ -363,13 +419,34 @@ def config(
     backup: bool = typer.Option(False, help="Create configuration backup"),
     restore: Optional[str] = typer.Option(None, help="Restore from backup file")
 ):
-    """Manage system configuration"""
+    """
+    Manages the system configuration.
+
+    This command provides options to show, reset, backup, and restore the
+    system configuration.
+
+    Args:
+        config_file: The path to the configuration file.
+        show: A boolean indicating whether to show the current configuration.
+        reset: A boolean indicating whether to reset to the default configuration.
+        backup: A boolean indicating whether to create a configuration backup.
+        restore: An optional path to a backup file to restore from.
+    """
     asyncio.run(_manage_config(config_file, show, reset, backup, restore))
 
 
 async def _manage_config(config_file: str, show: bool, reset: bool, 
                         backup: bool, restore: Optional[str]):
-    """Manage configuration"""
+    """
+    Manages the system configuration.
+
+    Args:
+        config_file: The path to the configuration file.
+        show: A boolean indicating whether to show the current configuration.
+        reset: A boolean indicating whether to reset to the default configuration.
+        backup: A boolean indicating whether to create a configuration backup.
+        restore: An optional path to a backup file to restore from.
+    """
     config = await load_config(config_file)
     
     if show:
@@ -414,7 +491,7 @@ async def _manage_config(config_file: str, show: bool, reset: bool,
 
 @app.command()
 def providers():
-    """List supported LLM providers"""
+    """Lists the supported LLM providers."""
     console.print(Panel.fit("[bold blue]Supported LLM Providers[/bold blue]", style="blue"))
     
     providers_info = [
@@ -453,12 +530,28 @@ def test_connection(
     api_key: Optional[str] = typer.Option(None, help="API key for testing"),
     config_file: str = typer.Option("config.yaml", help="Configuration file path")
 ):
-    """Test connection to an LLM provider"""
+    """
+    Tests the connection to an LLM provider.
+
+    Args:
+        provider: The LLM provider to test.
+        model: The LLM model to test.
+        api_key: An optional API key for testing.
+        config_file: The path to the configuration file.
+    """
     asyncio.run(_test_connection(provider, model, api_key, config_file))
 
 
 async def _test_connection(provider: str, model: str, api_key: Optional[str], config_file: str):
-    """Test LLM connection"""
+    """
+    Tests the connection to an LLM provider.
+
+    Args:
+        provider: The LLM provider to test.
+        model: The LLM model to test.
+        api_key: An optional API key for testing.
+        config_file: The path to the configuration file.
+    """
     console.print(f"[blue]🔍 Testing connection to {provider} with model {model}...[/blue]")
     
     config = await load_config(config_file)
@@ -500,7 +593,7 @@ async def _test_connection(provider: str, model: str, api_key: Optional[str], co
 
 @app.command()
 def version():
-    """Show version information"""
+    """Shows the version information."""
     console.print(Panel.fit(
         "[bold blue]Unified AI Agent System[/bold blue]\n"
         "[dim]Version: 1.0.0[/dim]\n"
