@@ -38,14 +38,14 @@ The system is composed of the following core components:
     pip install -r requirements.txt
     ```
 
-3.  Configure your LLM provider in `unified_config.yaml`.
+3.  Configure your LLM provider in `config.yaml`.
 
 ### Running the System
 
 You can start the system using the main entry point:
 
 ```bash
-python unified_main.py start
+python main.py start
 ```
 
 This will launch the system in interactive mode, where you can issue commands and interact with the AI agents.

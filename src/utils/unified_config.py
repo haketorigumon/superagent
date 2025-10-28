@@ -109,7 +109,7 @@ class WebConfig:
 class UnifiedConfig:
     """Unified configuration system with infinite flexibility"""
     
-    def __init__(self, config_file: str = "unified_config.yaml"):
+    def __init__(self, config_file: str = "config.yaml"):
         self.config_file = Path(config_file)
         self.config_data: Dict[str, Any] = {}
         self.environment_overrides: Dict[str, Any] = {}
@@ -539,7 +539,7 @@ async def get_config() -> UnifiedConfig:
     return unified_config
 
 
-async def load_config(config_file: str = "unified_config.yaml") -> UnifiedConfig:
+async def load_config(config_file: str = "config.yaml") -> UnifiedConfig:
     """Load configuration from a specific file"""
     config = UnifiedConfig(config_file)
     await config.initialize()
