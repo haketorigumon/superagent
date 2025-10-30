@@ -102,34 +102,6 @@ api_keys:
   baidu: null       # Set BAIDU_API_KEY environment variable
   alibaba: null     # Set ALIBABA_API_KEY environment variable
 
-# Advanced configuration options
-advanced:
-  # Entity management
-  entity_cache_size: 10000
-  entity_cleanup_interval: 3600
-  
-  # Memory optimization
-  memory_compression_threshold: 1000
-  memory_cleanup_interval: 1800
-  
-  # Plugin management
-  plugin_timeout: 30
-  plugin_retry_attempts: 2
-  
-  # Performance tuning
-  async_batch_size: 100
-  connection_pool_size: 20
-  
-  # Monitoring
-  metrics_collection_interval: 60
-  health_check_interval: 300
-  
-  # Logging
-  log_level: "INFO"
-  log_rotation: true
-  log_max_size: "100MB"
-  log_backup_count: 5
-
 # Environment-specific overrides
 environments:
   development:
@@ -158,12 +130,3 @@ environments:
       storage_dir: "test_memory"
     plugin:
       plugins_dir: "test_plugins"
-
-# Feature flags for experimental features
-features:
-  quantum_reasoning: false
-  neural_architecture_search: false
-  federated_learning: false
-  blockchain_consensus: false
-  swarm_intelligence: false
-  consciousness_simulation: false
